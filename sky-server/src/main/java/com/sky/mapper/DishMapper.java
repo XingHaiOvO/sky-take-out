@@ -62,6 +62,6 @@ public interface DishMapper {
      * @param categoryId
      * @return
      */
-    @Select("select * from dish d left join dish_flavor df on d.id = df.dish_id where d.category_id = #{categoryId}")
+    @Select("select * from dish where category_id = #{categoryId}")
     List<DishVO> getByCategoryId(Long categoryId);
 }
