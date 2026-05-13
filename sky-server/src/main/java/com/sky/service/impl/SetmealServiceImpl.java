@@ -93,4 +93,18 @@ public class SetmealServiceImpl implements SetmealService {
         return setmealVO;
     }
 
+    /**
+     * 修改套餐状态
+     * @param status
+     * @param id
+     */
+    public void startOrStop(Integer status, Long id) {
+        Setmeal setmeal = Setmeal.builder()
+                .status(status)
+                .id(id)
+                .build();
+
+        setmealMapper.update(setmeal);
+    }
+
 }
