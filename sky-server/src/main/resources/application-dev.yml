@@ -8,13 +8,17 @@ sky:
     password: 070911
 
   alioss:
-    endpoint: yourendpoint
-    access-key-id: yourkey
-    access-key-secret: yoursecret
-    bucket-name: yourbucket
+    endpoint: your-endpoint
+    access-key-id: your-access-key
+    access-key-secret: your-access-key-secret
+    bucket-name: your-bucketname
 
   redis:
     host: localhost
     port: 6379
     password:
     database: 10
+
+  wechat:
+    appid: your-appid
+    secret: your-secret
