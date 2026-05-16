@@ -18,10 +18,10 @@ public interface ShoppingCartMapper {
     List<ShoppingCart> list(ShoppingCart shoppingCart);
 
     /**
-     * 根据用户id修改购物车数量
+     * 根据用户id和购物车id修改购物车数量
      * @param shoppingCart
      */
-    @Update("update shopping_cart set number = #{number} where user_id = #{userId}")
+    @Update("update shopping_cart set number = #{number} where user_id = #{userId} and id = #{id}")
     void updateNumberById(ShoppingCart shoppingCart);
 
     /**
