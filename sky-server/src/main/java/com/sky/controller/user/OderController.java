@@ -1,6 +1,7 @@
 package com.sky.controller.user;
 
 import com.sky.controller.notify.PayNotifyController;
+import com.sky.dto.OrdersCancelDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.dto.OrdersPaymentDTO;
 import com.sky.dto.OrdersSubmitDTO;
@@ -90,9 +91,10 @@ public class OderController {
      */
     @PutMapping("/cancel/{id}")
     @ApiOperation("取消订单")
-    public Result cancel(@PathVariable Long id) {
+    public Result cancel(@PathVariable Long id, @RequestBody OrdersCancelDTO ordersCancelDTO) {
         log.info("取消订单，订单id为：{}", id);
-        orderService.cancel(id);
+        ordersCancelDTO.setId(id);
+        orderService.cancel(ordersCancelDTO);
         return Result.success();
     }
 
