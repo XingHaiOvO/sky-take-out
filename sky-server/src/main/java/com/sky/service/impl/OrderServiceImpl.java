@@ -206,18 +206,21 @@ public class OrderServiceImpl implements OrderService {
     }
 
     /**
-     * 用户取消订单
+     * 取消订单
      *
      * @param ordersCancelDTO
      */
     public void cancel(OrdersCancelDTO ordersCancelDTO) {
-        Orders orders = Orders
-                .builder()
-                .id(ordersCancelDTO.getId())
-                .status(Orders.CANCELLED)
-                .cancelReason(ordersCancelDTO.getCancelReason())
-                .cancelTime(LocalDateTime.now())
-                .build();
+        Orders orders = orderMapper.getById(ordersCancelDTO.getId());
+        if (orders == null || orders.getStatus() == 5) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+        if (orders.getPayStatus().equals(Orders.PAID)) {
+            log.info("退款");
+        }
+        orders.setStatus(Orders.CANCELLED);
+        orders.setCancelReason(ordersCancelDTO.getCancelReason());
+        orders.setCancelTime(LocalDateTime.now());
         orderMapper.update(orders);
     }
 
@@ -278,8 +281,10 @@ public class OrderServiceImpl implements OrderService {
      * @param ordersConfirmDTO
      */
     public void confirm(OrdersConfirmDTO ordersConfirmDTO) {
-        Orders orders = new Orders();
-        orders.setId(ordersConfirmDTO.getId());
+        Orders orders = orderMapper.getById(ordersConfirmDTO.getId());
+        if (orders == null || !orders.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
         orders.setStatus(Orders.CONFIRMED);
         orderMapper.update(orders);
     }
