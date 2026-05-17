@@ -104,4 +104,11 @@ public class OrderController {
         orderService.cancel(ordersCancelDTO);
         return Result.success();
     }
+
+    @PutMapping("/delivery/{id}")
+    public Result delivery(@PathVariable Long id) {
+        log.info("订单派送：{}", id);
+        orderService.delivery(id);
+        return Result.success();
+    }
 }
