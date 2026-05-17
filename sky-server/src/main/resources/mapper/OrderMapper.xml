@@ -25,10 +25,10 @@
         select * from orders as o
         <where>
             <if test="number != null and number != ''">
-                and o.number like concat('%',#{number},'%')
+                and o.number = #{number}
             </if>
             <if test="phone != null and phone != ''">
-                and o.phone like concat('%',#{phone},'%')
+                and o.phone = #{phone}
             </if>
             <if test="status != null">
                 and o.status = #{status}

@@ -217,6 +217,11 @@ public class OrderServiceImpl implements OrderService {
         orderMapper.update(orders);
     }
 
+    /**
+     * 再来一单
+     *
+     * @param id
+     */
     public void repetition(Long id) {
         Long userId = BaseContext.getCurrentId();
 
@@ -230,6 +235,19 @@ public class OrderServiceImpl implements OrderService {
             return shoppingCart;
         }).collect(Collectors.toList());
         shoppingCartMapper.insertBatch(list);
+    }
+
+    /**
+     * 条件搜索订单
+     *
+     * @param ordersPageQueryDTO
+     * @return
+     */
+    public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) {
+        PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
+        Page<Orders> page = orderMapper.page(ordersPageQueryDTO);
+
+        return new PageResult(page.getTotal(), page.getResult());
     }
 
 }
