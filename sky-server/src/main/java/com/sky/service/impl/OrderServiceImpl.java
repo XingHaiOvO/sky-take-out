@@ -201,4 +201,19 @@ public class OrderServiceImpl implements OrderService {
         return orderVO;
     }
 
+    /**
+     * 用户取消订单
+     *
+     * @param id
+     */
+    public void cancel(Long id) {
+        Orders orders = Orders
+                .builder()
+                .id(id)
+                .status(Orders.CANCELLED)
+                .cancelTime(LocalDateTime.now())
+                .build();
+        orderMapper.update(orders);
+    }
+
 }
