@@ -325,8 +325,16 @@ public class OrderServiceImpl implements OrderService {
     public PageResult conditionSearch(OrdersPageQueryDTO ordersPageQueryDTO) {
         PageHelper.startPage(ordersPageQueryDTO.getPage(), ordersPageQueryDTO.getPageSize());
         Page<Orders> page = orderMapper.page(ordersPageQueryDTO);
-
-        return new PageResult(page.getTotal(), page.getResult());
+        List<OrderVO> list = new ArrayList<>();
+        page.forEach(order -> {
+            OrderVO orderVO = new OrderVO();
+            BeanUtils.copyProperties(order, orderVO);
+            String dishes = orderDetailsMapper.getByOrderId(order.getId()).stream().map(orderDetail -> orderDetail.getName()).collect(Collectors.toList()).toString();
+            String orderDishes = dishes.substring(1, dishes.length() - 1);
+            orderVO.setOrderDishes(orderDishes);
+            list.add(orderVO);
+        });
+        return new PageResult(page.getTotal(), list);
     }
 
     /**
