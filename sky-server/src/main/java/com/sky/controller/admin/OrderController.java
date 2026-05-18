@@ -86,7 +86,7 @@ public class OrderController {
      * @return
      */
     @PutMapping("/rejection")
-    public Result rejection(OrdersRejectionDTO ordersRejectionDTO) {
+    public Result rejection(@RequestBody OrdersRejectionDTO ordersRejectionDTO) {
         log.info("订单拒绝：{}", ordersRejectionDTO);
         orderService.rejection(ordersRejectionDTO);
         return Result.success();
