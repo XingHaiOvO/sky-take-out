@@ -11,8 +11,10 @@ import com.sky.exception.AddressBookBusinessException;
 import com.sky.exception.OrderBusinessException;
 import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.*;
+import com.sky.properties.BaiDuProperties;
 import com.sky.result.PageResult;
 import com.sky.service.OrderService;
+import com.sky.utils.HttpClientUtil;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
@@ -24,10 +26,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -57,6 +60,13 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderService orderService;
 
+    @Autowired
+    private BaiDuProperties baiDuProperties;
+
+    private static final String ApiURL1 = "https://api.map.baidu.com/geocoding/v3";
+
+    private static final String ApiURL2 = "https://api.map.baidu.com/direction/v2/driving";
+
     /**
      * 用户下单
      * @param ordersSubmitDTO
@@ -71,6 +81,8 @@ public class OrderServiceImpl implements OrderService {
             // 抛出业务异常
             throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
         }
+
+        checkOutOfLocation(addressBook);
 
         // 查询购物车数据
         Long userId = BaseContext.getCurrentId();
@@ -117,6 +129,66 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         return orderSubmitVO;
+    }
+
+    /**
+     * 检查用户是否超出配送范围
+     */
+    private void checkOutOfLocation(AddressBook addressBook) {
+        Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("address", baiDuProperties.getAddress());
+        queryParams.put("output", "json");
+        queryParams.put("ak", baiDuProperties.getAk());
+
+        // 获取商家的经纬度
+        String response = HttpClientUtil.doGet(ApiURL1, queryParams);
+
+        JSONObject jsonObject = JSONObject.parseObject(response);
+        Integer status = jsonObject.getInteger("status");
+        if (status != 0) {
+            log.info("获取商家经纬度失败");
+            throw new OrderBusinessException(MessageConstant.LOCATION_PARSE_ERROR);
+        }
+
+        JSONObject location = jsonObject.getJSONObject("result").getJSONObject("location");
+        Double latitude = location.getDouble("lat");
+        Double longitude = location.getDouble("lng");
+        String shopLocation = latitude + "," + longitude;
+
+        // 获取用户经纬度
+        queryParams.put("address", addressBook.getDetail());
+        response = HttpClientUtil.doGet(ApiURL1, queryParams);
+        jsonObject = JSONObject.parseObject(response);
+        status = jsonObject.getInteger("status");
+        if (status != 0) {
+            log.info("获取用户经纬度失败");
+            throw new OrderBusinessException(MessageConstant.LOCATION_PARSE_ERROR);
+        }
+        location = jsonObject.getJSONObject("result").getJSONObject("location");
+        latitude = location.getDouble("lat");
+        longitude = location.getDouble("lng");
+        String userLocation = latitude + "," + longitude;
+
+        // 获取道路规划
+        queryParams.clear();
+        queryParams.put("origin", shopLocation);
+        queryParams.put("destination", userLocation);
+        queryParams.put("ak", baiDuProperties.getAk());
+        response = HttpClientUtil.doGet(ApiURL2, queryParams);
+        jsonObject = JSONObject.parseObject(response);
+        status = jsonObject.getInteger("status");
+        if (status != 0) {
+            log.info("获取道路规划失败");
+            throw new OrderBusinessException(MessageConstant.ROUTER_PLANNING_ERROR);
+        }
+
+        // 获取路线距离
+        Object route = jsonObject.getJSONObject("result").getJSONArray("routes").get(0);
+        Integer distance = JSONObject.parseObject(route.toString()).getInteger("distance");
+        if (distance > 5000) {
+            log.info("超出配送范围");
+            throw new OrderBusinessException(MessageConstant.OUT_OF_DELIVERY_RANGE);
+        }
     }
 
     /**
